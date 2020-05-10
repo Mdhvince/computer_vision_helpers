@@ -48,7 +48,7 @@ def augment_images_boxes(image, bbox, category, list_augmentations, pOneOf=1, pC
     )
     transformed = compose(**annotations)
     im = transformed['image']
-    bbox = np.array([list(i) for i in transformed['bboxes']])
+    bbox = [list(i) for i in transformed['bboxes']]
     return im, bbox
 
 
