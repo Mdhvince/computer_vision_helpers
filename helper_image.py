@@ -81,5 +81,23 @@ def show_image(image, figsize=None, ax=None):
     return ax
 
 
+def get_rgb_channels(image):
+    """Covert first to RGB Channel if image openned using cv2"""
+    r = image[:,:,0]
+    g = image[:,:,1]
+    b = image[:,:,2]
+    return r, g, b
+
+
+def ft_image(norm_image):
+    '''This function takes in a normalized (/255.), grayscale image
+       and returns a frequency spectrum transform of that image. '''
+    f = np.fft.fft2(norm_image)
+    fshift = np.fft.fftshift(f)
+    frequency_tx = 20*np.log(np.abs(fshift))
+    
+    return frequency_tx
+
+
 if __name__ == '__main__':
     pass
