@@ -96,7 +96,7 @@ def ft_image(norm_image):
     fshift = np.fft.fftshift(f)
     frequency_tx = 20*np.log(np.abs(fshift))
     
-    return frequency_tx
+    return fshift, frequency_tx
 
 def scale(x, feature_range=(-1, 1)):
     ''' Scale takes in an image x and returns that image, scaled
@@ -107,6 +107,15 @@ def scale(x, feature_range=(-1, 1)):
     min, max = feature_range
     x = x * (max - min) + min
     return x
+
+def psnr(img1, img2):
+    """img1 and img2 have range [0, 255]"""
+    img1 = img1.astype(np.float64)
+    img2 = img2.astype(np.float64)
+    mse = np.mean((img1 - img2) ** 2)
+    if mse == 0:
+        return float('inf')
+    return 20 * np.log10(255.0 / np.sqrt(mse))
 
 
 if __name__ == '__main__':
