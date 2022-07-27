@@ -11,5 +11,4 @@ Plotting / Augmentations / Image Processing
 #### Use
 ```python
 import helpers.helper_image as hi
-import helpers.helper_plot as hp
 ```

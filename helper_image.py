@@ -1,8 +1,30 @@
+import time
 import cv2
 import imutils
 import numpy as np
 import albumentations as albu
 import matplotlib.pyplot as plt
+
+
+def set_window_pos(name):
+    cv2.namedWindow(name, cv2.WINDOW_NORMAL)
+    cv2.moveWindow(name, 0, 0)
+
+
+def safe_close(cap):
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+def init_camera():
+    cap = cv2.VideoCapture(0)
+    cap.set(3, 640)  # 640
+    cap.set(4, 480)  # 480
+    time.sleep(2.)
+    _, frame = cap.read()
+    rows, cols, _ = frame.shape
+    center = int(cols / 2)
+    return cap, center, rows
 
 
 def sliding_window(image, stepSize, windowSize):
@@ -109,13 +131,59 @@ def scale(x, feature_range=(-1, 1)):
     return x
 
 def psnr(img1, img2):
-    """img1 and img2 have range [0, 255]"""
+    """img1 and img2 have range [0, 255].
+    to measure image similarity between an image and its reconstruction for example."""
     img1 = img1.astype(np.float64)
     img2 = img2.astype(np.float64)
     mse = np.mean((img1 - img2) ** 2)
     if mse == 0:
         return float('inf')
     return 20 * np.log10(255.0 / np.sqrt(mse))
+
+
+def draw_boxes_opencv(image, boxes, category=None, confidence=None, color=(0, 255, 255)):
+    """
+    :param image: RGB or BGR Image
+    :param boxes: 2D boxes (list or nd array) x1, y1, x2, y2 format
+    :param category: 1D array or list of category that describe the object
+    :param confidence: 1D array or list of confidence od the detection
+    :param color: Tuple of 3 integers from 0-255
+    :return: image
+    """
+    if category is None:
+        category = ['']
+
+    if confidence is None:
+        confidence = ['']
+
+    for cat, box, conf in zip(category, boxes, confidence):
+        if not isinstance(box, list): box.tolist()
+        x1, y1, x2, y2 = np.array([int(b) for b in box])
+
+        cv2.rectangle(image, (x1, y1), (x2, y2), color, 1)
+        cv2.putText(image,
+                    f"{cat}: {conf}",
+                    (x1 - 2, y1 - 5),
+                    cv2.FONT_HERSHEY_COMPLEX, 0.4, color, 1)
+    return image
+
+
+def basis_plotting_style(title, xlabel, ylabel, rotation_xlabel, rotation_ylabel):
+    plt.style.use('seaborn-paper')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.xticks(rotation=rotation_xlabel)
+    plt.yticks(rotation=rotation_ylabel)
+
+
+def draw_arrow_on_plot(text, x_pos_arrow, y_pos_arrow):
+    config_arrow = dict(headwidth=7, facecolor='black', shrink=0.05, width=2)
+    plt.annotate(text, xy=(x_pos_arrow, y_pos_arrow), xycoords='data',
+                 xytext=(0.75, 0.95), textcoords='axes fraction',
+                 arrowprops=config_arrow,
+                 horizontalalignment='right', verticalalignment='top',
+                 )
 
 
 if __name__ == '__main__':
