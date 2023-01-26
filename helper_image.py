@@ -5,7 +5,7 @@ import numpy as np
 import albumentations as albu
 import matplotlib.pyplot as plt
 
-
+# Videos
 def set_window_pos(name):
     cv2.namedWindow(name, cv2.WINDOW_NORMAL)
     cv2.moveWindow(name, 0, 0)
@@ -27,6 +27,7 @@ def init_camera():
     return cap, center, rows
 
 
+# Images
 def sliding_window(image, stepSize, windowSize):
     """
     :param image: RGB or BGR Image
@@ -104,7 +105,10 @@ def show_image(image, figsize=None, ax=None):
 
 
 def get_rgb_channels(image):
-    """Covert first to RGB Channel if image openned using cv2"""
+    """
+    Split images channels
+    Note: Covert first to RGB Channel if image openned using cv2
+    """
     r = image[:,:,0]
     g = image[:,:,1]
     b = image[:,:,2]
@@ -112,8 +116,10 @@ def get_rgb_channels(image):
 
 
 def ft_image(norm_image):
-    '''This function takes in a normalized (/255.), grayscale image
-       and returns a frequency spectrum transform of that image. '''
+    """
+    This function takes in a normalized (/255.), grayscale image
+    and returns a frequency spectrum transform of that image.
+    """
     f = np.fft.fft2(norm_image)
     fshift = np.fft.fftshift(f)
     frequency_tx = 20*np.log(np.abs(fshift))
@@ -121,18 +127,20 @@ def ft_image(norm_image):
     return fshift, frequency_tx
 
 def scale(x, feature_range=(-1, 1)):
-    ''' Scale takes in an image x and returns that image, scaled
-       with a feature_range of pixel values from -1 to 1.
-       This function assumes that the input x is already scaled from 0-1.'''
-    # assume x is scaled to (0, 1)
-    # scale to feature_range and return scaled x
+    """
+    Takes in an image x and returns that image scaled
+    with a feature_range of pixel values from -1 to 1.
+    This function assumes that the input x is already scaled from 0-1.
+    """
     min, max = feature_range
     x = x * (max - min) + min
     return x
 
 def psnr(img1, img2):
-    """img1 and img2 have range [0, 255].
-    to measure image similarity between an image and its reconstruction for example."""
+    """
+    img1 and img2 have range [0, 255].
+    to measure image similarity between an image and its reconstruction for example.
+    """
     img1 = img1.astype(np.float64)
     img2 = img2.astype(np.float64)
     mse = np.mean((img1 - img2) ** 2)
@@ -141,6 +149,7 @@ def psnr(img1, img2):
     return 20 * np.log10(255.0 / np.sqrt(mse))
 
 
+# drawing
 def draw_boxes_opencv(image, boxes, category=None, confidence=None, color=(0, 255, 255)):
     """
     :param image: RGB or BGR Image
