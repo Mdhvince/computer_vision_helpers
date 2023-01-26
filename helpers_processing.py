@@ -1,33 +1,11 @@
 import time
+
 import cv2
 import imutils
 import numpy as np
 import albumentations as albu
-import matplotlib.pyplot as plt
-
-# Videos
-def set_window_pos(name):
-    cv2.namedWindow(name, cv2.WINDOW_NORMAL)
-    cv2.moveWindow(name, 0, 0)
 
 
-def safe_close(cap):
-    cap.release()
-    cv2.destroyAllWindows()
-
-
-def init_camera():
-    cap = cv2.VideoCapture(0)
-    cap.set(3, 640)  # 640
-    cap.set(4, 480)  # 480
-    time.sleep(2.)
-    _, frame = cap.read()
-    rows, cols, _ = frame.shape
-    center = int(cols / 2)
-    return cap, center, rows
-
-
-# Images
 def sliding_window(image, stepSize, windowSize):
     """
     :param image: RGB or BGR Image
@@ -95,15 +73,6 @@ def get_contours(image):
     return extLeft, extRight, extTop, extBot
 
 
-def show_image(image, figsize=None, ax=None):
-    if not ax:
-        fig, ax = plt.subplots(figsize=figsize)
-    ax.imshow(image)
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-    return ax
-
-
 def get_rgb_channels(image):
     """
     Split images channels
@@ -113,6 +82,19 @@ def get_rgb_channels(image):
     g = image[:,:,1]
     b = image[:,:,2]
     return r, g, b
+
+
+def avg_brightness(rgb_image):
+    """
+    Find the average Value or brightness of an image
+    """
+    hsv = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2HSV)
+    h, w, _ = hsv.shape
+
+    sum_brightness = np.sum(hsv[:,:,2])
+    area = h * w
+    avg = sum_brightness / area
+    return avg
 
 
 def ft_image(norm_image):
@@ -149,51 +131,23 @@ def psnr(img1, img2):
     return 20 * np.log10(255.0 / np.sqrt(mse))
 
 
-# drawing
-def draw_boxes_opencv(image, boxes, category=None, confidence=None, color=(0, 255, 255)):
-    """
-    :param image: RGB or BGR Image
-    :param boxes: 2D boxes (list or nd array) x1, y1, x2, y2 format
-    :param category: 1D array or list of category that describe the object
-    :param confidence: 1D array or list of confidence od the detection
-    :param color: Tuple of 3 integers from 0-255
-    :return: image
-    """
-    if category is None:
-        category = ['']
-
-    if confidence is None:
-        confidence = ['']
-
-    for cat, box, conf in zip(category, boxes, confidence):
-        if not isinstance(box, list): box.tolist()
-        x1, y1, x2, y2 = np.array([int(b) for b in box])
-
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, 1)
-        cv2.putText(image,
-                    f"{cat}: {conf}",
-                    (x1 - 2, y1 - 5),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.4, color, 1)
-    return image
 
 
-def basis_plotting_style(title, xlabel, ylabel, rotation_xlabel, rotation_ylabel):
-    plt.style.use('seaborn-paper')
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.xticks(rotation=rotation_xlabel)
-    plt.yticks(rotation=rotation_ylabel)
 
+if __name__ == "__main__":
+	
+	# Example sliding window call
+	image = cv2.imread("im.png")
 
-def draw_arrow_on_plot(text, x_pos_arrow, y_pos_arrow):
-    config_arrow = dict(headwidth=7, facecolor='black', shrink=0.05, width=2)
-    plt.annotate(text, xy=(x_pos_arrow, y_pos_arrow), xycoords='data',
-                 xytext=(0.75, 0.95), textcoords='axes fraction',
-                 arrowprops=config_arrow,
-                 horizontalalignment='right', verticalalignment='top',
-                 )
+	(winW, winH) = (128, 128)
+	s = winW // 2
 
-
-if __name__ == '__main__':
-    pass
+	for (x, y, window) in sliding_window(image, stepSize=s, windowSize=(winW, winH)):
+		# if the window does not meet our desired window size, ignore it
+		if window.shape[0] != winH or window.shape[1] != winW:
+			continue
+		
+		cv2.rectangle(image, (x, y), (x + winW, y + winH), (0, 255, 0), 1)
+	
+	cv2.imshow("Window", image)
+	cv2.waitKey(0)
