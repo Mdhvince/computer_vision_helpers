@@ -101,6 +101,7 @@ def ft_image(norm_image):
     """
     This function takes in a normalized (/255.), grayscale image
     and returns a frequency spectrum transform of that image.
+
     """
     f = np.fft.fft2(norm_image)
     fshift = np.fft.fftshift(f)
