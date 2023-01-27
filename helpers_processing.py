@@ -96,6 +96,14 @@ def avg_brightness(rgb_image):
     avg = sum_brightness / area
     return avg
 
+def convolve_kernel_to_img(kernel, im_gray):
+    # -1 means output img will have the same type as input img
+    return cv2.filter2D(gray, -1, kernel)
+
+def blur_img(kernel_size, im_gray):
+    # 0 means that the standard deviation of the gaussian is automatically calculated
+    return cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
+
 
 def ft_image(norm_image):
     """
@@ -136,19 +144,25 @@ def psnr(img1, img2):
 
 
 if __name__ == "__main__":
-	
-	# Example sliding window call
-	image = cv2.imread("im.png")
+    
+    # Example sliding window call
+    image = cv2.imread("im.png")
 
-	(winW, winH) = (128, 128)
-	s = winW // 2
+    (winW, winH) = (128, 128)
+    s = winW // 2
 
-	for (x, y, window) in sliding_window(image, stepSize=s, windowSize=(winW, winH)):
-		# if the window does not meet our desired window size, ignore it
-		if window.shape[0] != winH or window.shape[1] != winW:
-			continue
-		
-		cv2.rectangle(image, (x, y), (x + winW, y + winH), (0, 255, 0), 1)
-	
-	cv2.imshow("Window", image)
-	cv2.waitKey(0)
+    for (x, y, window) in sliding_window(image, stepSize=s, windowSize=(winW, winH)):
+        # if the window does not meet our desired window size, ignore it
+        if window.shape[0] != winH or window.shape[1] != winW:
+            continue
+        cv2.rectangle(image, (x, y), (x + winW, y + winH), (0, 255, 0), 1)
+        
+        
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    kernel = np.array([[ -1, -2, -1],  # example of a high pass filter
+                       [ 0, 0, 0],
+                       [ 1, 2, 1]])
+                       
+    im = convolve_kernel_to_img(kernel, gray)
+    cv2.imshow("Window", im)
+    cv2.waitKey(0)
