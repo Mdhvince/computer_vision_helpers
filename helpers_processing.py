@@ -17,7 +17,6 @@ def sliding_window(image, stepSize, windowSize):
         for x in range(0, image.shape[1], stepSize):
             yield (x, y, image[y:y + windowSize[1], x:x + windowSize[0]])
 
-
 def pad_to_reach(array, shape):
     """
     :param array: numpy array
@@ -27,7 +26,6 @@ def pad_to_reach(array, shape):
     result = np.zeros(shape, dtype=np.uint8)
     result[:array.shape[0], :array.shape[1], :] = array
     return result
-
 
 def augment_images_boxes(image, bbox, category, list_augmentations, pOneOf=1, pCompose=1):
     """
@@ -52,7 +50,6 @@ def augment_images_boxes(image, bbox, category, list_augmentations, pOneOf=1, pC
     bbox = [list(i) for i in transformed['bboxes']]
     return im, bbox
 
-
 def get_contours(image):
     """
     Find the contour from a binary image and return the coordinates to draw
@@ -76,7 +73,6 @@ def get_contours(image):
 
     return extLeft, extRight, extTop, extBot
 
-
 def get_rgb_channels(image):
     """
     Split images channels
@@ -86,7 +82,6 @@ def get_rgb_channels(image):
     g = image[:,:,1]
     b = image[:,:,2]
     return r, g, b
-
 
 def avg_brightness(rgb_image):
     """
@@ -132,7 +127,6 @@ def dilation_erosion(image, mode="open"):
     
     return opening, closing
 
-
 def track_feature(ref_gray, prod_gray, nFeatures=5000):
     """
     use orb to track (video) or find (image) im_ref in the prod_image
@@ -148,7 +142,6 @@ def track_feature(ref_gray, prod_gray, nFeatures=5000):
     result = cv2.drawMatches(ref_gray, keypoints_ref, prod_gray, keypoints_prod, matches[:300], prod_gray, flags=2)
 
     return result
-
 
 def ft_image(norm_image):
     """
