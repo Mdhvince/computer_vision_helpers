@@ -54,6 +54,10 @@ def augment_images_boxes(image, bbox, category, list_augmentations, pOneOf=1, pC
 
 
 def get_contours(image):
+    """
+    Find the contour from a binary image and return the coordinates to draw
+    a bow around it
+    """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
 
@@ -104,6 +108,47 @@ def blur_img(kernel_size, im_gray):
     # 0 means that the standard deviation of the gaussian is automatically calculated
     return cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
 
+def dilation_erosion(image, mode="open"):
+
+    """
+    The manual way:
+        dilation = cv2.dilate(image, kernel, iterations=1)
+            - enlarges bright, white areas in an image by adding pixels to the perceived boundaries
+        erosion = cv2.erode(image, kernel, iterations=1)
+            - removes pixels along object boundaries and shrinks the size of objects
+    """
+
+    kernel = np.ones((5,5),np.uint8)
+    opening, closing = None, None
+
+    # The process of applying erosion THEN dilation is called Opening
+    # useful in noise reduction in which erosion first gets rid of noise then dilation enlarges the object again,
+    # but the noise will have disappeared from the previous erosion
+    if mode == "open":
+        opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)  # when the noise is around the object
+    
+    if mode == "close":
+        closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)   # when the noise is on the object
+    
+    return opening, closing
+
+
+def track_feature(ref_gray, prod_gray, nFeatures=5000):
+    """
+    use orb to track (video) or find (image) im_ref in the prod_image
+    """
+    orb = cv2.ORB_create(nFeatures, 2.0)
+    keypoints_ref, descriptors_ref = orb.detectAndCompute(ref_gray, None)
+    keypoints_prod, descriptors_prod = orb.detectAndCompute(prod_gray, None)
+
+    # feature matching
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(descriptors_ref, descriptors_prod)
+    matches = sorted(matches, key = lambda x : x.distance)
+    result = cv2.drawMatches(ref_gray, keypoints_ref, prod_gray, keypoints_prod, matches[:300], prod_gray, flags=2)
+
+    return result
+
 
 def ft_image(norm_image):
     """
@@ -146,23 +191,33 @@ def psnr(img1, img2):
 if __name__ == "__main__":
     
     # Example sliding window call
-    image = cv2.imread("im.png")
+    # image = cv2.imread("im.png")
 
-    (winW, winH) = (128, 128)
-    s = winW // 2
+    # (winW, winH) = (128, 128)
+    # s = winW // 2
 
-    for (x, y, window) in sliding_window(image, stepSize=s, windowSize=(winW, winH)):
-        # if the window does not meet our desired window size, ignore it
-        if window.shape[0] != winH or window.shape[1] != winW:
-            continue
-        cv2.rectangle(image, (x, y), (x + winW, y + winH), (0, 255, 0), 1)
+    # for (x, y, window) in sliding_window(image, stepSize=s, windowSize=(winW, winH)):
+    #     # if the window does not meet our desired window size, ignore it
+    #     if window.shape[0] != winH or window.shape[1] != winW:
+    #         continue
+    #     cv2.rectangle(image, (x, y), (x + winW, y + winH), (0, 255, 0), 1)
         
         
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    kernel = np.array([[ -1, -2, -1],  # example of a high pass filter
-                       [ 0, 0, 0],
-                       [ 1, 2, 1]])
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # kernel = np.array([[ -1, -2, -1],  # example of a high pass filter
+    #                    [ 0, 0, 0],
+    #                    [ 1, 2, 1]])
                        
-    im = convolve_kernel_to_img(kernel, gray)
-    cv2.imshow("Window", im)
+    # im = convolve_kernel_to_img(kernel, gray)
+    # cv2.imshow("Window", im)
+    # cv2.waitKey(0)
+
+    # ORB
+    prod_image = cv2.imread("im.png")
+    prod_gray = cv2.cvtColor(prod_image, cv2.COLOR_BGR2GRAY)
+    im_ref = prod_image[300: 500, 100: 300]
+    ref_gray = cv2.cvtColor(im_ref, cv2.COLOR_BGR2GRAY)
+    result = track_feature(ref_gray, prod_gray)
+
+    cv2.imshow("Window", result)
     cv2.waitKey(0)
