@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 
@@ -21,4 +22,17 @@ def draw_arrow_on_plot(text, x_pos_arrow, y_pos_arrow):
 
 if __name__ == "__main__":
 	
-	pass
+    plt.figure(figsize=(3, 3))
+
+    def relu(x):
+        return np.maximum(0, x)
+
+    x = np.linspace(-10, 10, 100)
+    y = relu(x)
+
+    plt.plot(x, y)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('ReLU activation function')
+    plt.grid()
+    plt.savefig("docs/ReLu.png")
