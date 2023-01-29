@@ -20,17 +20,17 @@ To account for this change in pixel value, after the convolution, the CNN applie
 ### ReLu (Rectified Linear Unit)
 If the pixel is negative, it will be maps as 0. If >= 0 it will remain unchanged.
 
-![ReLU](docs/ReLu.png "")
+![ReLU](ReLu.png "")
   
 The activation function also introduce non-linearity into a model, so the CNN will be able to find nonlinear thresholds/boundaries that classify training data in the case of image classification.
 
-## Maxpooling Layer
-After a convolutional layer comes a pooling layer; the most common type of pooling layer is a maxpooling layer. The maxpooling operation breaks an image into smaller patches, often 2x2 pixel areas. A maxpooling layer is defined by the patch size, 2x2, and a stride. The patch can be thought of as a 2x2 window that the maxpooling layer looks at to select a maximum pixel value. It then moves this window by some stride across and down the image. For a patch of size 2x2 and a stride of 2, this window will perfectly cover the image. A smaller stride would see some overlap in patches and a larger stride would miss some pixels entirely. So, we usually see a patch size and a stride size that are the same.  
+## Max pooling Layer
+After a convolutional layer comes a pooling layer; the most common type of pooling layer is a max-pooling layer. The max-pooling operation breaks an image into smaller patches, often 2x2 pixel areas. A max-pooling layer is defined by the patch size, 2x2, and a stride. The patch can be thought of as a 2x2 window that the max-pooling layer looks at to select a maximum pixel value. It then moves this window by some stride across and down the image. For a patch of size 2x2 and a stride of 2, this window will perfectly cover the image. A smaller stride would see some overlap in patches and a larger stride would miss some pixels entirely. So, we usually see a patch size and a stride size that are the same.  
 
-The process of maxpooling is used for few reasons:
-- __Dimentionality reduction__; increase the depth but decrease the height and width of the image
+The process of max-pooling is used for few reasons:
+- __Dimensionality reduction__; increase the depth but decrease the height and width of the image
 - Makes a network resistant to small pixel value changes in an input image
-- By reducing the width and height of image data as it moves forward through the CNN, the maxpooling layer __mimics an increase in the field of view__ for later layers. This allows later convolutional layers to detect features in a larger region of the input image.  
+- By reducing the width and height of image data as it moves forward through the CNN, the max-pooling layer __mimics an increase in the field of view__ for later layers. This allows later convolutional layers to detect features in a larger region of the input image.  
 For example a 3x3 kernel applied to an image will see a 3x3 pixel area at once. But on a pooled version, the same kernel will be applied to a larger region since the image h, w has been reduced.
 
 ## Fully-connected Layer

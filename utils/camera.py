@@ -1,3 +1,5 @@
+import time
+
 import cv2
 
 
@@ -23,4 +25,4 @@ def init_camera():
 
 
 if __name__ == "__main__":
-	pass
+    pass

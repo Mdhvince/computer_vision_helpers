@@ -21,15 +21,15 @@ class DetectionUtils:
         box_a_area = DetectionUtils.box_area(box_a)
         box_b_area = DetectionUtils.box_area(box_b)
         return inter_area / float(box_a_area + box_b_area - inter_area)
-    
+
     @staticmethod
     def box_center(box):
         return int(box[0] + (box[2] - box[0]) / 2), int(box[3] + (box[1] - box[3]) / 2)
-    
 
     @staticmethod
     def draw_boxes_opencv(image, boxes, thickness=1, category=None, confidence=None, color=(0, 255, 255)):
         """
+        :param thickness: thickness of rectangle
         :param image: RGB or BGR Image
         :param boxes: 2D boxes (list or nd array) x1, y1, x2, y2 format
         :param category: 1D array or list of category that describe the object
@@ -55,6 +55,5 @@ class DetectionUtils:
         return image
 
 
-
 if __name__ == "__main__":
-	pass
+    pass
