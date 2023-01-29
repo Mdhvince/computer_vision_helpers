@@ -2,14 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-
-def basis_plotting_style(title, xlabel, ylabel, rotation_xlabel, rotation_ylabel):
+def basis_plotting_style(title, x_label, y_label, rotation_x_label, rotation_y_label):
     plt.style.use('seaborn-paper')
     plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.xticks(rotation=rotation_xlabel)
-    plt.yticks(rotation=rotation_ylabel)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.xticks(rotation=rotation_x_label)
+    plt.yticks(rotation=rotation_y_label)
 
 
 def draw_arrow_on_plot(text, x_pos_arrow, y_pos_arrow):
@@ -21,11 +20,11 @@ def draw_arrow_on_plot(text, x_pos_arrow, y_pos_arrow):
 
 
 if __name__ == "__main__":
-	
     plt.figure(figsize=(3, 3))
 
     def relu(x):
         return np.maximum(0, x)
+
 
     x = np.linspace(-10, 10, 100)
     y = relu(x)
@@ -35,4 +34,5 @@ if __name__ == "__main__":
     plt.ylabel('y')
     plt.title('ReLU activation function')
     plt.grid()
-    plt.savefig("docs/ReLu.png")
+    # plt.savefig("docs/ReLu.png")
+    plt.show()
