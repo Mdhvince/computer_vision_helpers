@@ -22,8 +22,8 @@ def draw_arrow_on_plot(text, x_pos_arrow, y_pos_arrow):
 if __name__ == "__main__":
     plt.figure(figsize=(3, 3))
 
-    def relu(x):
-        return np.maximum(0, x)
+    def relu(x_values):
+        return np.maximum(0, x_values)
 
 
     x = np.linspace(-10, 10, 100)
