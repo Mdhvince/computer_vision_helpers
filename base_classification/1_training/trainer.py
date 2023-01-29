@@ -131,7 +131,7 @@ if __name__ == "__main__":
     ROOT_DIR = Path("/home/medhyvinceslas/Documents/programming/DL/base_image_classification")
     TRAIN_DIR = ROOT_DIR / "data/train"
     MODEL_PATH = ROOT_DIR / "model.pt"
-    VALID_RATIO = .3
+    VALID_RATIO = .25
     BATCH_SIZE = 32
     LR = 0.001
     N_EPOCHS = 100
