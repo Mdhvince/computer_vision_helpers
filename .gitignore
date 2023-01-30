@@ -4,3 +4,5 @@ env/
 .ipynb_checkpoints/
 *.png
 .idea/
+*.pt
+*.pth
