@@ -4,19 +4,25 @@ import albumentations as A
 import torch
 import torchvision
 import numpy as np
-# noinspection PyProtectedMember
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 from custom_dataset import CustomDataset, build_loaders, get_data
 from utils.gpu import cuda_setup
 
 
-def save_model(model, model_path, epoch, optimizer):
-    torch.save({
-        'epoch': epoch+1,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-    }, str(model_path))
+def load_model(model, model_path, optimizer, device):
+    checkpoint = torch.load(model_path, map_location=device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+    epoch = checkpoint['epoch']
+    loss = checkpoint['loss']
+
+    for state in optimizer.state.values():
+        for k, v in state.items():
+            if isinstance(v, torch.Tensor):
+                state[k] = v.to(device)
+
+    return model, optimizer, epoch, loss
 
 
 if __name__ == "__main__":
@@ -27,6 +33,9 @@ if __name__ == "__main__":
     batch_size = 8
     num_workers = 4
     valid_size = 0.25
+    num_epochs = 100
+    resume_training = False
+
     _, device = cuda_setup()
 
     transforms = [
@@ -41,15 +50,21 @@ if __name__ == "__main__":
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights="DEFAULT")
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-    model.to(device)
 
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=0.005, momentum=0.9, weight_decay=0.0005)
 
-    num_epochs = 2
-    valid_loss_min = np.Inf
+    if resume_training:
+        model, optimizer, last_epoch, valid_loss_min = load_model(model, model_path, optimizer, device)
+        model.train()
+    else:
+        valid_loss_min = np.Inf
+        last_epoch = 0
 
-    for epoch in range(num_epochs):
+    model.to(device)
+
+    for epoch in range(1, num_epochs + 1):
+        epoch = epoch + last_epoch
         train_loss = 0.0
         valid_loss = 0.0
 
@@ -77,10 +92,14 @@ if __name__ == "__main__":
         train_loss = train_loss / len(train_loader)
         valid_loss = valid_loss / len(valid_loader)
 
-        print(f"Epoch: {epoch+1} \tTraining Loss: {train_loss} \tValidation Loss: {valid_loss}")
+        print(f"Epoch: {epoch} \tTraining Loss: {train_loss} \tValidation Loss: {valid_loss}")
 
         if valid_loss <= valid_loss_min:
-            save_model(model, model_path, epoch, optimizer)
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': valid_loss,
+            }, str(model_path))
 
-
-
+        valid_loss_min = valid_loss
