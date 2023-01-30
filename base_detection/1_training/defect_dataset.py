@@ -1,12 +1,12 @@
 from pathlib import Path
-from lxml import etree
+import xml.etree.ElementTree as ET
 
 import cv2
 import torch
 import pandas as pd
 import numpy as np
 import torchvision.transforms as T
-import albumentations as albu
+import albumentations as A
 from torch.utils.data import SubsetRandomSampler, DataLoader
 
 from utils.camera import set_window_pos
@@ -27,21 +27,13 @@ class DefectDataset(torch.utils.data.Dataset):
         img_path = data.img_path
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        category = [Path(img_path).parent.name]
+
+        # just duplicates the category by the number of objects, I can do that since I don't care predicting the class
+        category = [Path(img_path).parent.name] * data.num_obj
 
         # get bounding box coordinates for each objects
-        num_objs = 1  # len(obj_ids)    here we have only one detection per image
-        boxes = []
-        xmin, ymin, xmax, ymax = int(data.xmin), int(data.ymin), int(data.xmax), int(data.ymax)
-        boxes.append([xmin, ymin, xmax, ymax])
-
-        # for i in range(num_objs):
-        #     xmin = np.min(pos[1])
-        #     xmax = np.max(pos[1])
-        #     ymin = np.min(pos[0])
-        #     ymax = np.max(pos[0])
-        #     boxes.append([xmin, ymin, xmax, ymax])
-
+        num_objs = data.num_obj
+        boxes = data.bbox  # 2D lists of boxes with length = num_objs
         img, boxes = self._resize(img, np.array(boxes))
 
         if self.transforms is not None:
@@ -64,21 +56,23 @@ class DefectDataset(torch.utils.data.Dataset):
         return len(self.data)
 
     def _resize(self, img, bbox):
+        boxes = []
         y = img.shape[0]
         x = img.shape[1]
 
         x_scale = self.im_size / x
         y_scale = self.im_size / y
-        img = cv2.resize(img, (self.im_size, self.im_size))
-        img = np.array(img)
+        img = cv2.resize(img, (self.im_size, self.im_size));
+        img = np.array(img);
 
-        (origLeft, origTop, origRight, origBottom) = bbox.flatten()
-        x = int(np.round(origLeft * x_scale))
-        y = int(np.round(origTop * y_scale))
-        xmax = int(np.round(origRight * x_scale))
-        ymax = int(np.round(origBottom * y_scale))
-
-        return img, [[x, y, xmax, ymax]]
+        for box in bbox:
+            (origLeft, origTop, origRight, origBottom) = box
+            x = int(np.round(origLeft * x_scale))
+            y = int(np.round(origTop * y_scale))
+            xmax = int(np.round(origRight * x_scale))
+            ymax = int(np.round(origBottom * y_scale))
+            boxes.append([x, y, xmax, ymax])
+        return img, np.array(boxes)
 
     def _augment_images_boxes(self, image, bbox, category, pOneOf=1, pCompose=1):
         """
@@ -86,10 +80,10 @@ class DefectDataset(torch.utils.data.Dataset):
         bbox = np.round(np.array(bbox), 1)
         bbox = [b.tolist() for b in bbox]
         annotations = {'image': image, 'bboxes': bbox, 'category_id': category}
-        compose = albu.Compose(
-            [albu.OneOf(self.transforms, p=pOneOf)],
+        compose = A.Compose(
+            [A.OneOf(self.transforms, p=pOneOf)],
             p=pCompose,
-            bbox_params=albu.BboxParams(format='pascal_voc', label_fields=['category_id'])
+            bbox_params=A.BboxParams(format='pascal_voc', label_fields=['category_id'])
         )
         transformed = compose(**annotations)
         im = transformed['image']
@@ -100,31 +94,37 @@ class DefectDataset(torch.utils.data.Dataset):
         all_data = []
         file_list = self.label_folder.glob('*.xml')
         for xml_file in file_list:
-            df = self.__parse_xml(xml_file)
+            df = self.__xml_to_df(xml_file)
             all_data.append(df)
 
         data = pd.concat(all_data, ignore_index=True)
         return data
 
-    def __parse_xml(self, xml_file_path):
-        with open(xml_file_path, "rb") as f:
-            xml = f.read()
-        root = etree.fromstring(xml)
-        annotation = root.find("object")
-        bndbox = annotation.find("bndbox")
+    def __xml_to_df(self, xml_file):
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
 
         filename = root.find("filename").text
         file = next((f for f in self.image_folder.rglob(filename) if f.is_file()), None)
         full_path = str(file.resolve())
 
-        data = {"img_path": full_path,
-                "width": root.find("size/width").text,
-                "height": root.find("size/height").text,
-                "xmin": bndbox.find("xmin").text,
-                "ymin": bndbox.find("ymin").text,
-                "xmax": bndbox.find("xmax").text,
-                "ymax": bndbox.find("ymax").text}
-        return pd.DataFrame(data, index=[0])
+        # Create a list to store the data
+        data = []
+        bbox = []
+        for item in root:
+            if item.tag == 'object':
+                bbox.append([
+                    int(item.find('./bndbox/xmin').text),
+                    int(item.find('./bndbox/ymin').text),
+                    int(item.find('./bndbox/xmax').text),
+                    int(item.find('./bndbox/ymax').text)
+                ])
+        data.append({'img_path': full_path, 'bbox': bbox})
+
+        # Create a dataframe from the list
+        df = pd.DataFrame(data)
+        df["num_obj"] = len(bbox)
+        return df
 
 
 def collate_fn(batch):
@@ -146,9 +146,11 @@ def visualize_data_loader(data_loader):
     im = undo_transform(im)
     im = cv2.normalize(im, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
     bbox = targets[0]["boxes"]
-    bbox = bbox[0].numpy()
-    x1, y1, x2, y2 = np.array([int(b) for b in bbox])
-    cv2.rectangle(im, (x1, y1), (x2, y2), (0, 255, 255), 1, cv2.LINE_AA)
+
+    for box in bbox:
+        box = box.numpy()
+        x1, y1, x2, y2 = np.array([int(b) for b in box])
+        cv2.rectangle(im, (x1, y1), (x2, y2), (0, 255, 255), 1, cv2.LINE_AA)
 
     return im
 
@@ -192,13 +194,12 @@ if __name__ == "__main__":
     name_window = "img"
 
     transforms = [
-        albu.HorizontalFlip(p=.5),
-        albu.VerticalFlip(p=.5),
-        albu.ShiftScaleRotate(),
+        A.HorizontalFlip(p=.5),
+        A.VerticalFlip(p=.5),
+        A.ShiftScaleRotate(),
     ]
 
     dataset = DefectDataset(label_folder, image_folder, transforms, im_size=800)
-    # data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=collate_fn)
     train_loader, valid_loader = build_loaders(dataset, batch_size, valid_size, num_workers)
 
     im1 = visualize_data_loader(train_loader)
