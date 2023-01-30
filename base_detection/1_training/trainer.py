@@ -1,11 +1,10 @@
-import math
-import sys
 from pathlib import Path
 
 import albumentations as A
 import torch
 import torchvision
 import numpy as np
+# noinspection PyProtectedMember
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 from custom_dataset import CustomDataset, build_loaders, get_data
