@@ -69,6 +69,7 @@ class CustomDataset(torch.utils.data.Dataset):
         category = data.category
         boxes = data.bbox
 
+        # TODO: Resize + Augment images and bboxes offline (before training) to speed-up training
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         resized_img, resized_boxes = self._resize(img, np.array(boxes))

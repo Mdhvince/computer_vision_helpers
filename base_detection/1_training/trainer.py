@@ -31,10 +31,11 @@ if __name__ == "__main__":
     image_folder = dataset_path / "images/images"
     model_path = Path("/home/medhyvinceslas/Documents/programming/helpers/base_detection/weights/detect_defect.pt")
     batch_size = 8
-    num_workers = 4
+    num_workers = 8
     valid_size = 0.25
-    num_epochs = 100
-    resume_training = False
+    num_epochs = 1
+    im_size = 800
+    resume_training = True
 
     _, device = cuda_setup()
 
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     ]
 
     data, num_classes = get_data(label_folder, image_folder)
-    dataset = CustomDataset(data, transforms, im_size=800)
+    dataset = CustomDataset(data, transforms, im_size=im_size)
     train_loader, valid_loader = build_loaders(dataset, batch_size, valid_size, num_workers)
 
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights="DEFAULT")
@@ -57,6 +58,7 @@ if __name__ == "__main__":
     if resume_training:
         model, optimizer, last_epoch, valid_loss_min = load_model(model, model_path, optimizer, device)
         model.train()
+        print(f"Resume training: Last epoch={last_epoch}\tValidation loss={valid_loss_min}")
     else:
         valid_loss_min = np.Inf
         last_epoch = 0
