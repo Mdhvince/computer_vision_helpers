@@ -130,11 +130,12 @@ class Trainer:
 if __name__ == "__main__":
     ROOT_DIR = Path("/home/medhyvinceslas/Documents/programming/DL/base_image_classification")
     TRAIN_DIR = ROOT_DIR / "data/train"
-    MODEL_PATH = ROOT_DIR / "model.pt"
+
+    MODEL_PATH = Path("/home/medhyvinceslas/Documents/programming/helpers/classification/weights/model.pt")
     VALID_RATIO = .25
-    BATCH_SIZE = 32
+    BATCH_SIZE = 4
     LR = 0.001
-    N_EPOCHS = 100
+    N_EPOCHS = 1
 
     transform = T.Compose([T.RandomRotation(30), T.RandomHorizontalFlip(),
                            T.Resize(255), T.CenterCrop(224),
@@ -143,4 +144,4 @@ if __name__ == "__main__":
     trainer = Trainer(transform, TRAIN_DIR, MODEL_PATH, VALID_RATIO, BATCH_SIZE, N_EPOCHS,LR)
     train_loader, valid_loader = trainer.load_data()
     # trainer.visualise_data_loader(train_loader, 8)
-    # trainer.train()
+    trainer.train()

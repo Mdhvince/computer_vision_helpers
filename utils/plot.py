@@ -25,7 +25,7 @@ def viz_layer(layer, n_filters=3):
     fig = plt.figure(figsize=(20, 20))
 
     for i in range(n_filters):
-        ax = fig.add_subplot(1, n_filters, i + 1)
+        ax = fig
         # grab layer outputs
         ax.imshow(np.squeeze(layer[0, i].data.numpy()), cmap='gray')
         ax.set_title('Output %s' % str(i + 1))
@@ -37,7 +37,7 @@ def plot_filters(filters):
     fig = plt.figure(figsize=(12, 6))
     fig.subplots_adjust(left=0, right=1.5, bottom=0.8, top=1, hspace=0.05, wspace=0.05)
     for i in range(n_filters):
-        ax = fig.add_subplot(1, n_filters, i + 1, xticks=[], yticks=[])
+        ax = fig
         ax.imshow(filters[i], cmap='gray')
         ax.set_title('Filter %s' % str(i + 1))
 

@@ -10,7 +10,7 @@ import albumentations as A
 from torch.utils.data import SubsetRandomSampler, DataLoader
 from sklearn import preprocessing
 
-from utils.camera import set_window_pos
+from utils.opencv_helpers import OpencvHelper
 
 
 def collate_fn(batch):
@@ -58,26 +58,28 @@ class CustomDataset(torch.utils.data.Dataset):
         - category: 1D list of integer representing the class of each object
     """
 
-    def __init__(self, data, transforms, im_size=800):
+    def __init__(self, data, transforms, im_size):
         self.transforms = transforms
         self.im_size = im_size
         self.data = data
 
     def __getitem__(self, idx):
         data = self.data.iloc[idx]
-        img_path = data.img_path
+        img_path = Path(data.img_path)
+        img_path = img_path.with_stem(img_path.stem + "_resized")  # take the already resized image
+        img_path = str(img_path)
         category = data.category
         boxes = data.bbox
+        original_size = (int(data.height), int(data.width))
 
-        # TODO: Resize + Augment images and bboxes offline (before training) to speed-up training
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        resized_img, resized_boxes = self._resize(img, np.array(boxes))
+        _, bboxes = self._resize(img, np.array(boxes), resize_img=False, original_size=original_size)
 
-        if self.transforms is not None:
-            aug_img, aug_boxes = self._augment_images_boxes(resized_img, resized_boxes, category, pOneOf=1, pCompose=1)
+        # if self.transforms is not None:
+        #     img, bboxes = self._augment_images_boxes(img, bboxes, category, pOneOf=1, pCompose=1)
 
-        tensor_boxes = torch.as_tensor(aug_boxes, dtype=torch.float32)
+        tensor_boxes = torch.as_tensor(bboxes, dtype=torch.float32)
         labels = torch.as_tensor(category, dtype=torch.int64)
         image_id = torch.tensor([idx])
         area = (tensor_boxes[:, 3] - tensor_boxes[:, 1]) * (tensor_boxes[:, 2] - tensor_boxes[:, 0])
@@ -85,21 +87,26 @@ class CustomDataset(torch.utils.data.Dataset):
         target = {"boxes": tensor_boxes, "labels": labels, "image_id": image_id, "area": area, "iscrowd": iscrowd}
 
         final_transform = T.Compose([T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
-        transformed_img = final_transform(aug_img)
+        transformed_img = final_transform(img)
         return transformed_img, target
 
     def __len__(self):
         return len(self.data)
 
-    def _resize(self, img, bbox):
+    def _resize(self, img, bbox, resize_img=True, original_size=(None, None)):
         boxes = []
-        y = img.shape[0]
-        x = img.shape[1]
+
+        # so add height and width in the dataframe
+        if resize_img:
+            y = img.shape[0]
+            x = img.shape[1]
+        else:
+            y, x = original_size
 
         x_scale = self.im_size / x
         y_scale = self.im_size / y
-        img = cv2.resize(img, (self.im_size, self.im_size));
-        img = np.array(img);
+        if resize_img:
+            img = cv2.resize(img, (self.im_size, self.im_size))
 
         for box in bbox:
             (origLeft, origTop, origRight, origBottom) = box
@@ -154,6 +161,9 @@ def xml_to_df(xml_file, image_folder):
     file = next((f for f in image_folder.rglob(filename) if f.is_file()), None)
     full_path = str(file.resolve())
 
+    height = root.find("size/height").text
+    width = root.find("size/width").text
+
     # Create a list to store the data
     data = []
     bbox = []
@@ -165,7 +175,7 @@ def xml_to_df(xml_file, image_folder):
                 int(item.find('./bndbox/xmax').text),
                 int(item.find('./bndbox/ymax').text)
             ])
-    data.append({'img_path': full_path, 'bbox': bbox})
+    data.append({'img_path': full_path, 'height': height, 'width': width, 'bbox': bbox})
 
     # Create a dataframe from the list
     df = pd.DataFrame(data)
@@ -204,23 +214,18 @@ if __name__ == "__main__":
     valid_size = 0.25
     name_window = "img"
 
-    transforms = [
-        A.HorizontalFlip(p=.5),
-        A.VerticalFlip(p=.5)
-    ]
+    ocv_helper = OpencvHelper()
+
+    transforms = [A.HorizontalFlip(p=.5), A.VerticalFlip(p=.5)]
     data, _ = get_data(label_folder, image_folder)
 
-    dataset = CustomDataset(data, transforms, im_size=800)
+    dataset = CustomDataset(data, transforms, im_size=256)
     train_loader, valid_loader = build_loaders(dataset, batch_size, valid_size, num_workers)
 
     im1 = visualize_data_loader(train_loader)
     im1 = cv2.cvtColor(im1, cv2.COLOR_RGB2BGR)
-
     im2 = visualize_data_loader(valid_loader)
     im2 = cv2.cvtColor(im2, cv2.COLOR_RGB2BGR)
-
     im = np.hstack((im1, im2))
 
-    set_window_pos(name_window)
-    cv2.imshow(name_window, im)
-    cv2.waitKey()
+    ocv_helper.imshow(im, "out")
