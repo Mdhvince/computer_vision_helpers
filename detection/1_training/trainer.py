@@ -116,7 +116,6 @@ if __name__ == "__main__":
             losses = sum(loss for loss in loss_dict.values())
             total_valid_loss += losses.item()
 
-        # Refer to the paper to know more about the losses
         # loss_dict = {
         #   'loss_classifier': tensor(2.5018, grad_fn=<NllLossBackward0>),
         #   'loss_box_reg': tensor(0.0273, grad_fn=<DivBackward0>),

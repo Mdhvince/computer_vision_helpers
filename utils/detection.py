@@ -27,7 +27,7 @@ class DetectionUtils:
         return int(box[0] + (box[2] - box[0]) / 2), int(box[3] + (box[1] - box[3]) / 2)
 
     @staticmethod
-    def draw_boxes_opencv(image, boxes, thickness=1, category=None, confidence=None, color=(0, 255, 255)):
+    def draw_boxes_opencv(image, boxes, thickness=1, category=None, confidence=None, color=(255, 255, 0)):
         """
         :param thickness: thickness of rectangle
         :param image: RGB or BGR Image
@@ -45,13 +45,14 @@ class DetectionUtils:
 
         for cat, box, conf in zip(category, boxes, confidence):
             if not isinstance(box, list): box.tolist()
-            x1, y1, x2, y2 = np.array([int(b) for b in box])
 
+            x1, y1, x2, y2 = np.array([int(b) for b in box])
             cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness, cv2.LINE_AA)
-            cv2.putText(image,
-                        f"{cat}: {conf}",
-                        (x1 - 2, y1 - 5),
-                        cv2.FONT_HERSHEY_COMPLEX, 0.4, color, 1)
+
+            if conf is not None and conf != "":
+                conf = "{:.2f}".format(conf)
+                cv2.putText(
+                    image, f"{cat}: {conf}", (x1 - 2, y1 - 5), cv2.FONT_HERSHEY_COMPLEX, 0.4, color, 1, cv2.LINE_AA)
         return image
 
 

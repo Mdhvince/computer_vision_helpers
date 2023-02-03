@@ -96,7 +96,6 @@ class CustomDataset(torch.utils.data.Dataset):
     def _resize(self, img, bbox, resize_img=True, original_size=(None, None)):
         boxes = []
 
-        # so add height and width in the dataframe
         if resize_img:
             y = img.shape[0]
             x = img.shape[1]
