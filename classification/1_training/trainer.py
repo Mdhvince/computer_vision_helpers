@@ -130,7 +130,6 @@ class Trainer:
 if __name__ == "__main__":
     ROOT_DIR = Path("/home/medhyvinceslas/Documents/programming/DL/base_image_classification")
     TRAIN_DIR = ROOT_DIR / "data/train"
-
     MODEL_PATH = Path("/home/medhyvinceslas/Documents/programming/helpers/classification/weights/model.pt")
     VALID_RATIO = .25
     BATCH_SIZE = 4
