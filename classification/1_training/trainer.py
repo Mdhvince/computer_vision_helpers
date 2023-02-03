@@ -128,9 +128,13 @@ class Trainer:
 
 
 if __name__ == "__main__":
-    ROOT_DIR = Path("/home/medhyvinceslas/Documents/programming/DL/base_image_classification")
-    TRAIN_DIR = ROOT_DIR / "data/train"
+    ROOT_DIR = Path("/home/medhyvinceslas/Documents/programming/datasets")
+    TRAIN_DIR = ROOT_DIR / "plant_disease_dataset/Train/Train"
     MODEL_PATH = Path("/home/medhyvinceslas/Documents/programming/helpers/classification/weights/model.pt")
+
+    assert TRAIN_DIR.is_dir()
+    assert MODEL_PATH.parent.is_dir()
+
     VALID_RATIO = .25
     BATCH_SIZE = 4
     LR = 0.001
@@ -142,5 +146,5 @@ if __name__ == "__main__":
 
     trainer = Trainer(transform, TRAIN_DIR, MODEL_PATH, VALID_RATIO, BATCH_SIZE, N_EPOCHS,LR)
     train_loader, valid_loader = trainer.load_data()
-    # trainer.visualise_data_loader(train_loader, 8)
-    trainer.train()
+    trainer.visualise_data_loader(train_loader, 4)
+    # trainer.train()
