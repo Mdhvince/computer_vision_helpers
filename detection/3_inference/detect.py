@@ -91,6 +91,8 @@ def reformat_detections(outputs, actual_size, target_size):
     scores = scores[ind_candidates]
     labels = labels[ind_candidates]
 
+    # TODO: Add non-maximal suppression here
+
     boxes = resize_boxes(boxes, actual_size=actual_size, target_size=target_size)
 
     return boxes, scores, labels
