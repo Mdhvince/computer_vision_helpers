@@ -76,7 +76,19 @@ worse than ReLU/Maxout.
 
 ### __Step 2__: Finding `y_bar`  
 
-  
+Mathematically the idea is the same as for __finding h_bar in step 1__  
+The input vector `h_bar = [h1 h2 h3]`  
+is multiplied by the weight matrix `W2 = [W_11 W_12 W_13; W_21 W_22 W_23; W_31 W_32 W_33;]`  
+to produce `y_bar' = [y1, y2]`  
+
+<h3><center>y_bar = h_bar ⋅ W2 </center></h3> 
+
+Once `y_bar` found, adding an __activation function__ is optional. In some problems, we can use the __softmax function__
+(ie. multiclass classification).  
+The softmax will allow the values to be between 0 and 1 and the sum of the values will be 1 (good for probabilities).
+
+![Softmax](softmax.png "")   
+
 
 
 
