@@ -144,7 +144,7 @@ if __name__ == "__main__":
                            T.Resize(255), T.CenterCrop(224),
                            T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
-    trainer = Trainer(transform, TRAIN_DIR, MODEL_PATH, VALID_RATIO, BATCH_SIZE, N_EPOCHS,LR)
+    trainer = Trainer(transform, TRAIN_DIR, MODEL_PATH, VALID_RATIO, BATCH_SIZE, N_EPOCHS, LR)
     train_loader, valid_loader = trainer.load_data()
     trainer.visualise_data_loader(train_loader, 4)
     # trainer.train()

@@ -3,45 +3,18 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from PIL import Image
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import seaborn as sns
 from torch import nn
+import torch.nn.functional as F
 from torchvision import models, datasets
 from torchvision.models import ResNet18_Weights
 
 from utils.gpu import cuda_setup
 from utils.opencv_helpers import OpencvHelper
 
-
-# def process_image(image):
-#     """ Scales, crops, and normalizes a PIL image for a PyTorch model, returns a Numpy array"""
-#     img = Image.open(image)
-#
-#     # Resize image
-#     if img.size[0] > img.size[1]:
-#         img.thumbnail((10000, 256))
-#     else:
-#         img.thumbnail((256, 10000))
-#
-#     # Crop image
-#     bottom_margin = (img.height - 224) / 2
-#     top_margin = bottom_margin + 224
-#     left_margin = (img.width - 224) / 2
-#     right_margin = left_margin + 224
-#
-#     img = img.crop((left_margin, bottom_margin, right_margin, top_margin))
-#
-#     # Normalize image
-#     img = np.array(img) / 255
-#     mean = np.array([0.485, 0.456, 0.406])
-#     std = np.array([0.229, 0.224, 0.225])
-#     img = (img - mean) / std
-#
-#     # move to first dimension --> PyTorch
-#     img = img.transpose((2, 0, 1))
-#
-#     return img
+plt.style.use("ggplot")
 
 
 def normalize(image):
@@ -88,12 +61,18 @@ def get_classes(directory):
     classes = data.classes
     return data.class_to_idx.items(), classes
 
+def classify(model, tensor_img, idx_class_map, top_k, device):
+    # we want to calculate gradient of highest score w.r.t. input, so we set requires_grad to True for input
+    tensor_img.requires_grad = True
+    logpas = model(tensor_img.to(device))
+    probas = F.softmax(logpas, dim=1)
 
-def classify(model, tensor_img, idx_class_map, top_k):
-    logpas = model(tensor_img)
-    proba = torch.exp(logpas)
+    score, indices = torch.max(logpas, 1)  # for the saliency map
+    score.backward()  # backward pass to get gradients of score predicted class w.r.t. input image
+    slc, _ = torch.max(torch.abs(tensor_img.grad[0]), dim=0)  # get max along channel axis
+    slc = (slc - slc.min()) / (slc.max() - slc.min())  # normalize to [0..1]
 
-    top_proba, top_label = proba.topk(top_k)
+    top_proba, top_label = probas.topk(top_k)
     top_proba = top_proba.detach().numpy().tolist()[0]
     top_label = top_label.detach().numpy().tolist()[0]
 
@@ -101,25 +80,49 @@ def classify(model, tensor_img, idx_class_map, top_k):
     idx_to_class = {val: key for key, val in idx_class_map}
     top_labels = [idx_to_class[lab] for lab in top_label]
 
-    return top_proba, top_labels
+    return top_proba, top_labels, slc
 
+def overlay(image, saliency):
+    # Normalize to [0, 1] range
+    image = (image - image.min()) / (image.max() - image.min())
+    saliency = (saliency - saliency.min()) / (saliency.max() - saliency.min())
 
-def plot_solution(img, probas, labels):
+    saliency[saliency < 0.15] = 0
+    heatmap = cm.hot(saliency)[..., :3]
+    combined = image + heatmap
+    return combined
+
+def plot_solution(img, probas, labels, saliency):
+    saliency = saliency.detach().numpy()
+
     plt.figure(figsize=(10, 10))
 
-    ax = plt.subplot(2, 1, 1)
+    ax = plt.subplot(2, 2, 1)
+    plt.axis(False)
+    plt.title("Input")
     ax.imshow(img)
 
-    plt.subplot(2, 1, 2)
+    ax = plt.subplot(2, 2, 2)
+    plt.axis(False)
+    plt.title("Saliency map")
+    ax.imshow(saliency, cmap=plt.cm.hot)
+
+    ax = plt.subplot(2, 2, 3)
+    plt.title("Class probability")
     sns.barplot(x=probas, y=labels, color=sns.color_palette()[0])
 
+    ax = plt.subplot(2, 2, 4)
+    combined = overlay(img, saliency)
+    ax.imshow(combined)
+    plt.axis(False)
+    plt.title("combined")
     plt.show()
 
 
 if __name__ == "__main__":
     ROOT_DIR = Path("/home/medhyvinceslas/Documents/programming/datasets")
     TEST_DIR = ROOT_DIR / "plant_disease_dataset/Test/Test"
-    MODEL_PATH = Path("/home/medhyvinceslas/Documents/programming/helpers/classification/weights/model.pt")
+    MODEL_PATH = Path("/home/medhyvinceslas/Documents/programming/helpers/classification/weights/plant_disease.pt")
     ocv_helper = OpencvHelper()
 
     img_path = TEST_DIR / "Rust/85f0c2c0db4b4f4f.jpg"
@@ -140,5 +143,5 @@ if __name__ == "__main__":
     normalized_img = normalize(cropped)
     tensor_img = to_tensor(normalized_img)
 
-    probas, labels = classify(model, tensor_img, idx_class_map, top_k=len(classes))
-    plot_solution(img, probas, labels)
+    probas, labels, saliency = classify(model, tensor_img, idx_class_map, top_k=len(classes), device=device)
+    plot_solution(cropped, probas, labels, saliency)
