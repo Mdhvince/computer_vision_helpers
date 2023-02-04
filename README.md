@@ -12,3 +12,5 @@ We can find base code that I wrote for:
 I am paying attention to write the code with not too high level library so that I have full flexibility 
 either to customize on specific use cases or to translate in another language (i.e C++) when it comes to embedded AI use cases.
 
+#### Example output from a plant disease classifier (ResNet 18)
+![ReLU](docs/plant_disease_classification.png "")

@@ -104,7 +104,7 @@ if __name__ == "__main__":
     detection_utils = DetectionUtils()
 
     model_path = Path("/home/medhyvinceslas/Documents/programming/helpers/detection/weights/detect_defect.pt")
-    dataset_path = Path("/home/medhyvinceslas/Documents/programming/DL/datasets/defect_detection")
+    dataset_path = Path("/home/medhyvinceslas/Documents/programming/datasets/defect_detection")
     image_folder = dataset_path / "images/images"
     img_path = image_folder / "inclusion/img_03_425503100_00066.jpg"
 
