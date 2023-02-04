@@ -20,7 +20,7 @@ To account for this change in pixel value, after the convolution, the CNN applie
 ### ReLu (Rectified Linear Unit)
 If the pixel is negative, it will be maps as 0. If >= 0 it will remain unchanged.
 
-![ReLU](ReLu.png "")
+![ReLU](relu.png "")
   
 The activation function also introduce non-linearity into a model, so the CNN will be able to find nonlinear thresholds/boundaries that classify training data in the case of image classification.
 
