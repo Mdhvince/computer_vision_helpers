@@ -87,9 +87,8 @@ def overlay(image, saliency):
     image = (image - image.min()) / (image.max() - image.min())
     saliency = (saliency - saliency.min()) / (saliency.max() - saliency.min())
 
-    saliency[saliency < 0.15] = 0
     heatmap = cm.hot(saliency)[..., :3]
-    combined = image + heatmap
+    combined = image * 0.4 + heatmap * 0.6
     return combined
 
 def plot_solution(img, probas, labels, saliency):
@@ -107,7 +106,7 @@ def plot_solution(img, probas, labels, saliency):
     plt.title("Saliency map")
     ax.imshow(saliency, cmap=plt.cm.hot)
 
-    ax = plt.subplot(2, 2, 3)
+    plt.subplot(2, 2, 3)
     plt.title("Class probability")
     sns.barplot(x=probas, y=labels, color=sns.color_palette()[0])
 
@@ -115,7 +114,9 @@ def plot_solution(img, probas, labels, saliency):
     combined = overlay(img, saliency)
     ax.imshow(combined)
     plt.axis(False)
-    plt.title("combined")
+    plt.title("Combined")
+
+    plt.tight_layout()
     plt.show()
 
 
