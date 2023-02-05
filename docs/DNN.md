@@ -1,6 +1,22 @@
-## Recurrent Neural Networks (RNN's)
+## Neural networks
 
-### Preliminaries - Feed-Forward Neural Network
+### Biological view
+The basic computational unit of the brain is a __neuron__. Approx 86B in the human nervous system, connected with approx 
+10^15 __synapses__.  
+Each neuron receives input signals from its __dendrites__ and produces output signals along its __axon__. The axon 
+connects to dendrites of other neurons via synapses.  
+
+If we model the neuron, we can say that the signal that travel along the axon (__x0__) interact with the dendrites of 
+other neuron (__w0 ⋅ x0__) based on the __synaptic strength__ of the synapse (__w0__).  
+The idea is that the synaptic strengths (weight __w__) are learnable and control the strength of influence 
+(and direction: excitory being positive weight, inhibitory being negative weight) of one neuron to another.  
+When the signal is carried to the __cell body__ by the dendrite, the cell body add-up all interaction (wi ⋅ xi). If the 
+sum is above a certain threshold, the neuron can __fire__, sending a spike along its axon. The __firing rate__ of the 
+neuron is modeled by an activation function __f__.  
+
+![neuron](neuron.png "") 
+
+## Feed-Forward Neural Network
 
 - n inputs x
 - 3 neurons in a single hidden layer h
@@ -88,6 +104,55 @@ Once `y_bar` found, adding an __activation function__ is optional. In some probl
 The softmax will allow the values to be between 0 and 1 and the sum of the values will be 1 (good for probabilities).
 
 ![Softmax](softmax.png "")   
+
+## Backpropagation  
+
+- We have computed the output via the feed-forward pass
+- We have computed the error __E__ (ie difference between ground truth and the output of the network)
+
+Now we have to go __backward__ in order to change the __weights__ in the goal of decreasing the network error __E__.  
+Going backward from the outputs to the inputs while changing the weights is a process called __backpropagation__ 
+(which is __Stochastic Gradient Descent computed using the chain rule__).  
+
+__The goal is to find a set of weight that minimizing the network error__  
+We use an iterative process presenting the network with one input at a time from the training set.  
+
+Let's consider the error __EA__ (at point A) parameterized by the weight __WA__ after a forward-pass (The error that we 
+have when having the weight WA)  
+
+![backprop1](backprop1.png "")  
+
+To reduce the error, we need to increase the weights.  
+Since the gradient __∇__ (the derivative, or slope of the curve) at point A is __negative__ (pointing down), we need to change 
+the weight in its __negative direction__ to increase the value of WA.  
+
+![backprop2](backprop2.png "")  
+  
+At point B, the gradient is positive, so if we update the weight in the negative direction of the gradient, it will 
+decrease the weight __WB__, thus the error __EB__.  
+
+![backprop3](backprop3.png "")  
+
+The weight update of a single weight is represented as follow:  
+<h3><center> W_new = W_prev + α(-∂E/∂W) </center></h3> 
+- __α__: learning rate
+- __∂E/∂W__: partial derivative of the error with respect to the weight (how each weight __separately__ change the error 
+since the error is a function of many variables)
+- __α(-∂E/∂W) = ΔW_ijk__: backpropagation (amount by which the weight will be updated between layer k at neuron i and 
+layer k+1 at neuron j)  
+  
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
