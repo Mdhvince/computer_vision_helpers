@@ -134,12 +134,14 @@ decrease the weight __WB__, thus the error __EB__.
 ![backprop3](backprop3.png "")  
 
 The weight update of a single weight is represented as follow:  
-<h3><center> W_new = W_prev + α(-∂E/∂W) </center></h3> 
-__α__: learning rate  
-__∂E/∂W__: partial derivative of the error with respect to the weight (how each weight __separately__ change the error 
+<h3><center> W_new = W_prev + α(-∂E/∂W) </center></h3>   
+
+- __α__: learning rate  
+- __∂E/∂W__: partial derivative of the error with respect to the weight (how each weight __separately__ change the error 
 since the error is a function of many variables)  
-__α(-∂E/∂W) = ΔW_ijk__: backpropagation (amount by which the weight will be updated between layer k at neuron i and 
+- __α(-∂E/∂W) = ΔW_ijk__: backpropagation (amount by which the weight will be updated between layer k at neuron i and 
 layer k+1 at neuron j)  
+  
   
 
 
