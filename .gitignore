@@ -4,5 +4,6 @@ env/
 venv/
 .ipynb_checkpoints/
 .idea/
+docs/deprecated/
 *.pt
 *.pth
