@@ -85,10 +85,15 @@ def classify(model, tensor_img, idx_class_map, top_k, device):
 def overlay(image, saliency):
     # Normalize to [0, 1] range
     image = (image - image.min()) / (image.max() - image.min())
-    saliency = (saliency - saliency.min()) / (saliency.max() - saliency.min())
 
-    heatmap = cm.hot(saliency)[..., :3]
-    combined = image * 0.4 + heatmap * 0.6
+    heatmap = cv2.applyColorMap(np.uint8(255 * saliency), cv2.COLORMAP_JET)
+    heatmap = np.float32(heatmap) / 255
+    combined = heatmap + np.float32(image)
+    combined = combined / np.max(combined)
+    combined = np.uint8(255 * combined)
+
+    # heatmap = cm.hot(saliency)[..., :3]
+    # combined = image * 0.4 + heatmap * 0.6
     return combined
 
 def plot_solution(img, probas, labels, saliency):
