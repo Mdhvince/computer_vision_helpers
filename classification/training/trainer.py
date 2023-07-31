@@ -13,23 +13,28 @@ torch.manual_seed(17)
 
 
 class Trainer:
-    def __init__(self, transformation, train_dir, model_path, valid_ratio, batch_size, n_epochs, lr=0.001):
+    def __init__(self, train_dir, model_path, valid_ratio, batch_size, n_epochs, lr=0.001, momentum=0.9):
         self.model = None
-        self.transform = transformation
         self.train_dir = train_dir
         self.model_path = model_path
         self.valid_ratio = valid_ratio
         self.batch_size = batch_size
         self.n_epochs = n_epochs
         self.lr = lr
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.train_data = datasets.ImageFolder(self.train_dir, transform=self.transform)
         self.classes = self.train_data.classes
 
         self._load_pretrained_model()
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.SGD(self.model.fc.parameters(), lr=self.lr, momentum=0.9)
+        self.optimizer = optim.SGD(self.model.fc.parameters(), lr=self.lr, momentum=momentum)
+
+        self.transform = T.Compose([
+            T.RandomRotation(30), T.RandomHorizontalFlip(),
+            T.Resize(255), T.CenterCrop(224),
+            T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
 
     def train(self):
         valid_loss_min = np.Inf
@@ -84,25 +89,6 @@ class Trainer:
         print(f"output features: {self.model.fc.out_features}")
         self.model.to(self.device)
 
-    def visualise_data_loader(self, data_loader, nb_images_to_display, figsize=(25, 4)):
-        def imshow(img):
-            """helper function to un-normalize and display an image"""
-            img = img / 2 + 0.5
-            plt.imshow(np.transpose(img, (1, 2, 0)))
-
-        # obtain one batch of training images
-        images, labels = next(iter(data_loader))
-        images = images.numpy()
-
-        # plot the images in the batch, along with the corresponding labels
-        fig = plt.figure(figsize=figsize)
-        for idx in np.arange(nb_images_to_display):
-            ax = fig.add_subplot(2, nb_images_to_display // 2, idx + 1, xticks=[], yticks=[])
-            imshow(images[idx])
-            ax.set_title(self.classes[labels[idx]])
-
-        plt.show()
-
     def load_data(self):
         train_sampler, valid_sampler = self._train_valid_split()
         train_loader = torch.utils.data.DataLoader(self.train_data, batch_size=self.batch_size, sampler=train_sampler)
@@ -128,23 +114,14 @@ class Trainer:
 
 
 if __name__ == "__main__":
-    ROOT_DIR = Path("/home/medhyvinceslas/Documents/programming/datasets")
-    TRAIN_DIR = ROOT_DIR / "plant_disease_dataset/Train/Train"
-    MODEL_PATH = Path("/home/medhyvinceslas/Documents/programming/helpers/classification/weights/model.pt")
-
-    assert TRAIN_DIR.is_dir()
-    assert MODEL_PATH.parent.is_dir()
-
+    TRAIN_DIR = ""
+    MODEL_PATH = ""
     VALID_RATIO = .25
     BATCH_SIZE = 4
     LR = 0.001
     N_EPOCHS = 1
+    MOMENTUM = 0.9
 
-    transform = T.Compose([T.RandomRotation(30), T.RandomHorizontalFlip(),
-                           T.Resize(255), T.CenterCrop(224),
-                           T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
-
-    trainer = Trainer(transform, TRAIN_DIR, MODEL_PATH, VALID_RATIO, BATCH_SIZE, N_EPOCHS, LR)
+    trainer = Trainer(TRAIN_DIR, MODEL_PATH, VALID_RATIO, BATCH_SIZE, N_EPOCHS, LR, MOMENTUM)
     train_loader, valid_loader = trainer.load_data()
-    trainer.visualise_data_loader(train_loader, 4)
-    # trainer.train()
+    trainer.train()
