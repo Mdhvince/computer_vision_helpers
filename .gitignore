@@ -7,3 +7,4 @@ venv/
 docs/deprecated/
 *.pt
 *.pth
+deprecated/
