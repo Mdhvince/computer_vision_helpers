@@ -8,3 +8,4 @@ docs/deprecated/
 *.pt
 *.pth
 deprecated/
+data_examples/

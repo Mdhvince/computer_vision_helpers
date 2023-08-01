@@ -123,7 +123,6 @@ def parser_fn():
     parser.add_argument("--n_epochs", type=int, help="Number of epochs", default=1)
     parser.add_argument("--lr", type=float, help="Learning rate", default=0.001)
     parser.add_argument("--momentum", type=float, help="Momentum", default=0.9)
-    parser.add_argument("--log_dir", type=str, help="Path to the log directory", default="logs")
     args = parser.parse_args()
     return args
 
@@ -132,7 +131,7 @@ def parser_fn():
 if __name__ == "__main__":
     args = parser_fn()
 
-    logging.basicConfig(filename=os.path.join(args.log_dir, "trainer.log"), level=logging.INFO)
+    logging.basicConfig(filename="logs/trainer.log", level=logging.INFO)
     logging.info("Running pytorch version: {}".format(torch.__version__))
     logging.info("Starting training.")
 
