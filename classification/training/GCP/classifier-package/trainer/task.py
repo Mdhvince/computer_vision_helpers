@@ -116,8 +116,21 @@ class Trainer:
 
 def parser_fn():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_dir", type=str, help="Path to the training directory")
-    parser.add_argument("--model_path", type=str, help="Path to where to save the model (.pt)")
+    parser.add_argument(
+        "--train_dir",
+        type=str,
+        help="Path to the training directory. On GCP, use /gcs/bucket/my_data_dir"
+    )
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        help="Path to where to save the model (.pt). On GCP, use /gcs/bucket/model-output/my_model.pt"
+    )
+    parser.add_argument(
+        "--log_path",
+        type=str,
+        help="Path to the log file. On GCP, use /gcs/bucket/log/my_log.log"
+    )
     parser.add_argument("--valid_ratio", type=float, help="Ratio of the validation set", default=0.25)
     parser.add_argument("--batch_size", type=int, help="Batch size", default=4)
     parser.add_argument("--n_epochs", type=int, help="Number of epochs", default=1)
@@ -131,7 +144,7 @@ def parser_fn():
 if __name__ == "__main__":
     args = parser_fn()
 
-    logging.basicConfig(filename="logs/trainer.log", level=logging.INFO)
+    logging.basicConfig(filename=args.log_path, level=logging.INFO)
     logging.info("Running pytorch version: {}".format(torch.__version__))
     logging.info("Starting training.")
 
